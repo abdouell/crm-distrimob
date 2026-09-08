@@ -1,0 +1,248 @@
+<div class="app-view">
+  <!-- App Header -->
+  <header class="app-header">
+    <div class="header-title-area">
+      <h1>Tableau de bord</h1>
+    </div>
+    <div class="header-actions">
+      <button class="btn btn-primary" (click)="openProspectModal()">
+        <i class="fa-solid fa-plus"></i>
+        <span>Nouveau Prospect</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon p-primary"><i class="fa-solid fa-building"></i></div>
+      <div class="stat-content">
+        <h3>Total Prospects</h3>
+        <p class="stat-number">{{ stats.total }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon p-warning"><i class="fa-solid fa-clock"></i></div>
+      <div class="stat-content">
+        <h3>En discussion</h3>
+        <p class="stat-number">{{ stats.active }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon p-success"><i class="fa-solid fa-file-signature"></i></div>
+      <div class="stat-content">
+        <h3>Clients Signés</h3>
+        <p class="stat-number">{{ stats.signed }}</p>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon p-danger"><i class="fa-solid fa-hourglass-end"></i></div>
+      <div class="stat-content">
+        <h3>Prospects Oubliés</h3>
+        <p class="stat-number">{{ stats.forgotten }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Area: Filters and Table -->
+  <div class="data-section-card">
+    <!-- Filters and Search Bar -->
+    <div class="filters-bar">
+      <div class="search-box">
+        <i class="fa-solid fa-magnifying-glass"></i>
+        <input
+          type="text"
+          placeholder="Rechercher par nom d'entreprise..."
+          [(ngModel)]="filters.search"
+          (input)="onFilterChange()"
+        />
+      </div>
+
+      <div class="filters-selects">
+        <div class="select-group">
+          <label for="filter-status">Statut</label>
+          <select id="filter-status" [(ngModel)]="filters.status" (change)="onFilterChange()">
+            <option value="">Tous les statuts</option>
+            <option value="nouveau">Nouveau</option>
+            <option value="qualifié">Qualifié</option>
+            <option value="contact établi">Contact établi</option>
+            <option value="RDV planifié">RDV planifié</option>
+            <option value="démo réalisée">Démo réalisée</option>
+            <option value="pilote en cours">Pilote en cours</option>
+            <option value="client signé">Client signé</option>
+            <option value="perdu">Perdu</option>
+          </select>
+        </div>
+
+        <div class="select-group">
+          <label for="filter-sector">Secteur</label>
+          <select id="filter-sector" [(ngModel)]="filters.activity_sector" (change)="onFilterChange()">
+            <option value="">Tous les secteurs</option>
+            <option value="FMCG">FMCG</option>
+            <option value="grossiste">Grossiste</option>
+            <option value="production">Production</option>
+            <option value="cosmétique">Cosmétique</option>
+            <option value="pharma">Pharma</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+
+        <div class="select-group">
+          <label for="filter-sort">Trier par</label>
+          <select id="filter-sort" [(ngModel)]="filters.ordering" (change)="onFilterChange()">
+            <option value="-created_at">Date d'ajout (Récent)</option>
+            <option value="created_at">Date d'ajout (Ancien)</option>
+            <option value="last_interaction_at_asc">Dernière interaction (Oubliés d'abord)</option>
+            <option value="last_interaction_at_desc">Dernière interaction (Récent)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Prospects Table -->
+    <div class="table-responsive">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Nom de l'entreprise</th>
+            <th>Secteur d'activité</th>
+            <th>Ville</th>
+            <th>Statut</th>
+            <th>Propriétaire</th>
+            <th>Dernière Interaction</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="loading">
+            <td colspan="7" class="text-center table-loading">
+              <i class="fa-solid fa-spinner fa-spin"></i> Chargement des prospects...
+            </td>
+          </tr>
+          <tr *ngIf="!loading && prospects.length === 0">
+            <td colspan="7" class="text-center table-empty">
+              <i class="fa-solid fa-folder-open"></i> Aucun prospect trouvé.
+            </td>
+          </tr>
+          <tr *ngFor="let p of prospects">
+            <td><strong>{{ p.name }}</strong></td>
+            <td><span class="badge badge-outline">{{ p.activity_sector }}</span></td>
+            <td>{{ p.city }}</td>
+            <td>
+              <span class="badge badge-status-{{ getStatusClass(p.status) }}">{{ p.status }}</span>
+            </td>
+            <td>{{ p.owner_name }}</td>
+            <td>
+              <span *ngIf="p.last_interaction_at; else neverContacted">
+                {{ formatDate(p.last_interaction_at) }}
+              </span>
+              <ng-template #neverContacted>
+                <span class="text-forgotten"><i class="fa-solid fa-triangle-exclamation"></i> Jamais contacté</span>
+              </ng-template>
+            </td>
+            <td class="text-right">
+              <div class="actions-cell">
+                <button class="btn-icon view-btn" (click)="viewDetails(p.id)" title="Voir les détails">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+                <button class="btn-icon edit-btn" (click)="openProspectModal(p)" title="Modifier">
+                  <i class="fa-solid fa-pen"></i>
+                </button>
+                <button class="btn-icon delete-btn" (click)="deleteProspect(p.id)" title="Supprimer">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-container">
+    <div *ngFor="let toast of toasts" class="toast {{ toast.type }}">
+      <i class="fa-solid" [ngClass]="getToastIcon(toast.type)"></i>
+      <span>{{ toast.message }}</span>
+    </div>
+  </div>
+
+  <!-- MODAL PROSPECT FORM -->
+  <div class="modal" [class.active]="showModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>{{ editingProspect ? 'Modifier le Prospect' : 'Nouveau Prospect' }}</h3>
+        <button class="modal-close" (click)="closeProspectModal()">&times;</button>
+      </div>
+      <form (ngSubmit)="saveProspect()">
+        <div class="form-row">
+          <div class="form-group col-12">
+            <label for="prospect-name">Nom de l'entreprise *</label>
+            <input type="text" id="prospect-name" name="name" [(ngModel)]="prospectForm.name" required placeholder="ex: DistriFood SARL">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label for="prospect-sector">Secteur d'activité *</label>
+            <select id="prospect-sector" name="activity_sector" [(ngModel)]="prospectForm.activity_sector" required>
+              <option value="">Sélectionner...</option>
+              <option value="FMCG">FMCG</option>
+              <option value="grossiste">Grossiste</option>
+              <option value="production">Production</option>
+              <option value="cosmétique">Cosmétique</option>
+              <option value="pharma">Pharma</option>
+              <option value="autre">Autre</option>
+            </select>
+          </div>
+          <div class="form-group col-6">
+            <label for="prospect-city">Ville *</label>
+            <input type="text" id="prospect-city" name="city" [(ngModel)]="prospectForm.city" required placeholder="ex: Casablanca">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label for="prospect-phone">Téléphone *</label>
+            <input type="text" id="prospect-phone" name="phone" [(ngModel)]="prospectForm.phone" required placeholder="ex: +212 522 00 11 22">
+          </div>
+          <div class="form-group col-6">
+            <label for="prospect-website">Site Web</label>
+            <input type="text" id="prospect-website" name="website" [(ngModel)]="prospectForm.website" placeholder="ex: https://distrifood.ma">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label for="prospect-source">Provenance / Source *</label>
+            <select id="prospect-source" name="source" [(ngModel)]="prospectForm.source" required>
+              <option value="">Sélectionner...</option>
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="recommandation">Recommandation</option>
+              <option value="salon">Salon</option>
+              <option value="autre">Autre</option>
+            </select>
+          </div>
+          <div class="form-group col-6">
+            <label for="prospect-status">Statut Commercial *</label>
+            <select id="prospect-status" name="status" [(ngModel)]="prospectForm.status" required>
+              <option value="nouveau">Nouveau</option>
+              <option value="qualifié">Qualifié</option>
+              <option value="contact établi">Contact établi</option>
+              <option value="RDV planifié">RDV planifié</option>
+              <option value="démo réalisée">Démo réalisée</option>
+              <option value="pilote en cours">Pilote en cours</option>
+              <option value="client signé">Client signé</option>
+              <option value="perdu">Perdu</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="prospect-notes">Notes libres</label>
+          <textarea id="prospect-notes" name="notes" [(ngModel)]="prospectForm.notes" rows="4" placeholder="Détails complémentaires, contexte de la discussion commerciale..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeProspectModal()">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

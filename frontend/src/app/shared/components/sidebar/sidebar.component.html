@@ -1,0 +1,39 @@
+<aside class="sidebar">
+  <div class="sidebar-header">
+    <div class="brand-logo">
+      <i class="fa-solid fa-layer-group logo-icon"></i>
+      <span>Pyrami<span>dev</span></span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <ul>
+      <li [class.active]="activeRoute === '/dashboard'">
+        <a (click)="navigateTo('/dashboard')" style="cursor: pointer;">
+          <i class="fa-solid fa-chart-line"></i>
+          <span>Tableau de bord</span>
+        </a>
+      </li>
+      <li [class.active]="activeRoute === '/prospects'">
+        <a (click)="navigateTo('/dashboard')" style="cursor: pointer;">
+          <i class="fa-solid fa-building-user"></i>
+          <span>Prospects</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-profile" *ngIf="user">
+      <div class="user-avatar">{{ getInitials() }}</div>
+      <div class="user-info">
+        <span class="user-name">{{ user.full_name }}</span>
+        <span class="user-role">{{ user.email }}</span>
+      </div>
+    </div>
+    <button (click)="logout()" class="btn-logout" title="Se déconnecter">
+      <i class="fa-solid fa-arrow-right-from-bracket"></i>
+      <span>Déconnexion</span>
+    </button>
+  </div>
+</aside>

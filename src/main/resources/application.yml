@@ -1,0 +1,34 @@
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/pyramidev_crm}
+    username: ${SPRING_DATASOURCE_USERNAME:crm_user}
+    password: ${SPRING_DATASOURCE_PASSWORD:crm_password123}
+    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
+  
+  jpa:
+    database-platform: ${SPRING_JPA_DATABASE_PLATFORM:org.hibernate.dialect.PostgreSQLDialect}
+    hibernate:
+      ddl-auto: validate # Flyway handles schema, JPA validates it
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+# Custom JWT configuration
+app:
+  jwt:
+    # Key must be long enough for HS256 algorithm (32 bytes / 256 bits minimum)
+    secret: ${JWT_SECRET_KEY:pyramidevCRMVeryLongSecretKeyMustBe32BytesLongForHS256}
+    expiration-ms: 86400000 # 24 heures en millisecondes
+
+server:
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+      force-request: true
+      force-response: true

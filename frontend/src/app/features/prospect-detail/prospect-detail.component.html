@@ -1,0 +1,348 @@
+<div class="app-view" *ngIf="prospect">
+  <!-- Back navigation -->
+  <div class="back-nav">
+    <button class="btn btn-text" (click)="goBack()">
+      <i class="fa-solid fa-arrow-left"></i>
+      <span>Retour au tableau de bord</span>
+    </button>
+  </div>
+
+  <div class="detail-grid">
+    <!-- Col 1: Prospect Profile Details & Contacts -->
+    <div class="detail-main-col">
+      
+      <!-- Profile Card -->
+      <div class="profile-card">
+        <div class="profile-header">
+          <div class="profile-title">
+            <h2>{{ prospect.name }}</h2>
+            <div class="badges-row">
+              <span class="badge badge-status-{{ getStatusClass(prospect.status) }}">{{ prospect.status }}</span>
+              <span class="badge badge-outline">{{ prospect.activity_sector }}</span>
+            </div>
+          </div>
+          <div class="profile-actions">
+            <button class="btn btn-secondary btn-sm" (click)="openProspectModal()">
+              <i class="fa-solid fa-pen-to-square"></i> Modifier
+            </button>
+            <button class="btn btn-danger btn-sm" (click)="deleteProspect()">
+              <i class="fa-solid fa-trash"></i> Supprimer
+            </button>
+          </div>
+        </div>
+
+        <div class="profile-info-grid">
+          <div class="info-item">
+            <span class="info-label">Ville</span>
+            <span class="info-value">{{ prospect.city }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Téléphone</span>
+            <span class="info-value">{{ prospect.phone }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Site Web</span>
+            <span class="info-value" *ngIf="prospect.website; else noWebsite">
+              <a [href]="prospect.website" target="_blank" rel="noopener">
+                {{ prospect.website }} <i class="fa-solid fa-up-right-from-square" style="font-size: 0.85em;"></i>
+              </a>
+            </span>
+            <ng-template #noWebsite><span class="info-value">-</span></ng-template>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Provenance / Source</span>
+            <span class="info-value">{{ prospect.source }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Créé le</span>
+            <span class="info-value">{{ formatDate(prospect.created_at) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">Commercial en charge</span>
+            <span class="info-value">{{ prospect.owner_name }}</span>
+          </div>
+        </div>
+
+        <div class="profile-notes">
+          <span class="info-label">Notes et Observations</span>
+          <p class="notes-content">{{ prospect.notes || 'Aucune note pour ce prospect.' }}</p>
+        </div>
+      </div>
+
+      <!-- Contacts Section -->
+      <div class="contacts-section">
+        <div class="section-header">
+          <h3><i class="fa-solid fa-address-book"></i> Contacts Associés</h3>
+          <button class="btn btn-secondary btn-sm" (click)="openContactModal()">
+            <i class="fa-solid fa-plus"></i> Ajouter un Contact
+          </button>
+        </div>
+
+        <div class="contacts-grid">
+          <div *ngIf="!prospect.contacts || prospect.contacts.length === 0" class="table-empty text-center col-12" style="width: 100%; grid-column: 1 / -1; padding: 20px; background-color: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
+            <i class="fa-solid fa-address-card" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
+            <p>Aucun interlocuteur enregistré pour cette entreprise.</p>
+          </div>
+
+          <div class="contact-card" *ngFor="let c of prospect.contacts">
+            <div class="contact-header">
+              <div>
+                <div class="contact-name">{{ c.first_name }} {{ c.last_name }}</div>
+                <div class="contact-job">{{ c.job_title }}</div>
+              </div>
+              <div class="contact-card-actions">
+                <button class="btn-icon" (click)="openContactModal(c)" title="Modifier">
+                  <i class="fa-solid fa-pencil"></i>
+                </button>
+                <button class="btn-icon" (click)="deleteContact(c.id)" title="Supprimer">
+                  <i class="fa-solid fa-trash"></i>
+                </button>
+              </div>
+            </div>
+            <div class="contact-body">
+              <a href="mailto:{{ c.email }}"><i class="fa-solid fa-envelope"></i> {{ c.email }}</a>
+              <a href="tel:{{ c.phone }}"><i class="fa-solid fa-mobile-screen-button"></i> {{ c.phone }}</a>
+              <a *ngIf="c.linkedin_url" [href]="c.linkedin_url" target="_blank" rel="noopener" class="text-secondary">
+                <i class="fa-brands fa-linkedin" style="color: #0077b5;"></i> Profil LinkedIn
+              </a>
+            </div>
+            <div class="contact-notes-area" *ngIf="c.notes">
+              <strong>Note :</strong> {{ c.notes }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Col 2: Interactions Timeline -->
+    <div class="detail-side-col">
+      <div class="interactions-card">
+        <div class="section-header">
+          <h3><i class="fa-solid fa-clock-rotate-left"></i> Historique des Échanges</h3>
+          <button class="btn btn-secondary btn-sm" (click)="openInteractionModal()">
+            <i class="fa-solid fa-plus"></i> Consigner un échange
+          </button>
+        </div>
+
+        <!-- Vertical Timeline -->
+        <div class="timeline">
+          <div *ngIf="!prospect.interactions || prospect.interactions.length === 0" class="table-empty text-center" style="padding: 20px;">
+            <i class="fa-solid fa-clock" style="font-size: 1.5rem; margin-bottom: 8px;"></i>
+            <p>Aucun échange consigné pour l'instant.</p>
+          </div>
+
+          <div class="timeline-item" *ngFor="let i of sortedInteractions" [attr.data-type]="i.type">
+            <div class="timeline-icon">
+              <i [ngClass]="getInteractionIcon(i.type)"></i>
+            </div>
+            <div class="timeline-content">
+              <div class="timeline-header">
+                <span class="timeline-type">
+                  {{ i.type }}
+                  <span *ngIf="i.contact_name" style="font-weight: 500; text-transform: none; color: var(--text-secondary);">
+                    avec {{ i.contact_name }}
+                  </span>
+                </span>
+                <span class="timeline-date">{{ formatDateTime(i.date) }}</span>
+              </div>
+              <p class="timeline-notes">{{ i.notes }}</p>
+              <div class="timeline-actions">
+                <button class="btn btn-secondary btn-sm" (click)="openInteractionModal(i)">
+                  <i class="fa-solid fa-pencil"></i> Modifier
+                </button>
+                <button class="btn btn-danger btn-sm" (click)="deleteInteraction(i.id)">
+                  <i class="fa-solid fa-trash"></i> Supprimer
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div class="toast-container">
+    <div *ngFor="let toast of toasts" class="toast {{ toast.type }}">
+      <i class="fa-solid" [ngClass]="getToastIcon(toast.type)"></i>
+      <span>{{ toast.message }}</span>
+    </div>
+  </div>
+
+  <!-- MODAL PROSPECT EDIT -->
+  <div class="modal" [class.active]="showProspectModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Modifier le Prospect</h3>
+        <button class="modal-close" (click)="closeProspectModal()">&times;</button>
+      </div>
+      <form (ngSubmit)="saveProspect()">
+        <div class="form-row">
+          <div class="form-group col-12">
+            <label for="prospect-name">Nom de l'entreprise *</label>
+            <input type="text" id="prospect-name" name="name" [(ngModel)]="prospectForm.name" required placeholder="ex: DistriFood SARL">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label for="prospect-sector">Secteur d'activité *</label>
+            <select id="prospect-sector" name="activity_sector" [(ngModel)]="prospectForm.activity_sector" required>
+              <option value="">Sélectionner...</option>
+              <option value="FMCG">FMCG</option>
+              <option value="grossiste">Grossiste</option>
+              <option value="production">Production</option>
+              <option value="cosmétique">Cosmétique</option>
+              <option value="pharma">Pharma</option>
+              <option value="autre">Autre</option>
+            </select>
+          </div>
+          <div class="form-group col-6">
+            <label for="prospect-city">Ville *</label>
+            <input type="text" id="prospect-city" name="city" [(ngModel)]="prospectForm.city" required placeholder="ex: Casablanca">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label for="prospect-phone">Téléphone *</label>
+            <input type="text" id="prospect-phone" name="phone" [(ngModel)]="prospectForm.phone" required placeholder="ex: +212 522 00 11 22">
+          </div>
+          <div class="form-group col-6">
+            <label for="prospect-website">Site Web</label>
+            <input type="text" id="prospect-website" name="website" [(ngModel)]="prospectForm.website" placeholder="ex: https://distrifood.ma">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label for="prospect-source">Provenance / Source *</label>
+            <select id="prospect-source" name="source" [(ngModel)]="prospectForm.source" required>
+              <option value="">Sélectionner...</option>
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="recommandation">Recommandation</option>
+              <option value="salon">Salon</option>
+              <option value="autre">Autre</option>
+            </select>
+          </div>
+          <div class="form-group col-6">
+            <label for="prospect-status">Statut Commercial *</label>
+            <select id="prospect-status" name="status" [(ngModel)]="prospectForm.status" required>
+              <option value="nouveau">Nouveau</option>
+              <option value="qualifié">Qualifié</option>
+              <option value="contact établi">Contact établi</option>
+              <option value="RDV planifié">RDV planifié</option>
+              <option value="démo réalisée">Démo réalisée</option>
+              <option value="pilote en cours">Pilote en cours</option>
+              <option value="client signé">Client signé</option>
+              <option value="perdu">Perdu</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="prospect-notes">Notes libres</label>
+          <textarea id="prospect-notes" name="notes" [(ngModel)]="prospectForm.notes" rows="4" placeholder="Détails complémentaires, contexte de la discussion commerciale..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeProspectModal()">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL CONTACT FORM -->
+  <div class="modal" [class.active]="showContactModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>{{ editingContact ? 'Modifier le Contact' : 'Ajouter un Contact' }}</h3>
+        <button class="modal-close" (click)="closeContactModal()">&times;</button>
+      </div>
+      <form (ngSubmit)="saveContact()">
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label for="contact-firstname">Prénom *</label>
+            <input type="text" id="contact-firstname" name="first_name" [(ngModel)]="contactForm.first_name" required placeholder="ex: Amine">
+          </div>
+          <div class="form-group col-6">
+            <label for="contact-lastname">Nom *</label>
+            <input type="text" id="contact-lastname" name="last_name" [(ngModel)]="contactForm.last_name" required placeholder="ex: Radi">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="contact-job">Fonction / Poste *</label>
+          <input type="text" id="contact-job" name="job_title" [(ngModel)]="contactForm.job_title" required placeholder="ex: Directeur Général, DSI, etc.">
+        </div>
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label for="contact-email">Email *</label>
+            <input type="email" id="contact-email" name="email" [(ngModel)]="contactForm.email" required placeholder="ex: amine@cosmebelle.ma">
+          </div>
+          <div class="form-group col-6">
+            <label for="contact-phone">Téléphone mobile *</label>
+            <input type="text" id="contact-phone" name="phone" [(ngModel)]="contactForm.phone" required placeholder="ex: +212 661 22 33 44">
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="contact-linkedin">Lien LinkedIn (Optionnel)</label>
+          <input type="text" id="contact-linkedin" name="linkedin_url" [(ngModel)]="contactForm.linkedin_url" placeholder="ex: https://linkedin.com/in/profil">
+        </div>
+        <div class="form-group">
+          <label for="contact-notes">Notes</label>
+          <textarea id="contact-notes" name="notes" [(ngModel)]="contactForm.notes" rows="3" placeholder="Informations complémentaires sur l'interlocuteur..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeContactModal()">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL INTERACTION FORM -->
+  <div class="modal" [class.active]="showInteractionModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>{{ editingInteraction ? 'Modifier l\'échange' : 'Consigner un échange' }}</h3>
+        <button class="modal-close" (click)="closeInteractionModal()">&times;</button>
+      </div>
+      <form (ngSubmit)="saveInteraction()">
+        <div class="form-row">
+          <div class="form-group col-6">
+            <label for="interaction-date">Date de l'échange *</label>
+            <input type="datetime-local" id="interaction-date" name="date" [(ngModel)]="interactionForm.date" required>
+          </div>
+          <div class="form-group col-6">
+            <label for="interaction-type">Type d'échange *</label>
+            <select id="interaction-type" name="type" [(ngModel)]="interactionForm.type" required>
+              <option value="">Sélectionner...</option>
+              <option value="appel">Appel</option>
+              <option value="email">Email</option>
+              <option value="WhatsApp">WhatsApp</option>
+              <option value="RDV">RDV</option>
+              <option value="démo">Démo</option>
+              <option value="visite">Visite</option>
+              <option value="LinkedIn">LinkedIn</option>
+            </select>
+          </div>
+          <div class="form-group col-6">
+            <label for="interaction-contact">Contact associé</label>
+            <select id="interaction-contact" name="contact_id" [(ngModel)]="interactionForm.contact_id">
+              <option [ngValue]="null">Aucun contact (Général)</option>
+              <option *ngFor="let contact of prospect.contacts" [ngValue]="contact.id">
+                {{ contact.first_name }} {{ contact.last_name }}
+              </option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="interaction-notes">Note libre (ce qui s'est dit, ce qui a été décidé) *</label>
+          <textarea id="interaction-notes" name="notes" [(ngModel)]="interactionForm.notes" rows="5" required placeholder="Saisir un compte rendu clair et détaillé de l'échange commercial..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="closeInteractionModal()">Annuler</button>
+          <button type="submit" class="btn btn-primary">Enregistrer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>

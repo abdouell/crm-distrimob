@@ -1,0 +1,17 @@
+# Build artifacts & caches (rebuilt inside the image)
+target/
+frontend/node_modules/
+frontend/.angular/
+frontend/dist/
+.maven/
+
+# Dev leftovers
+data/
+.idea/
+.vscode/
+*.log
+docker-compose.yml.bak
+
+# Secrets & VCS
+.env
+.git/

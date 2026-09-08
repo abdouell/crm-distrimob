@@ -1,0 +1,53 @@
+# Production compose — VPS 37.27.10.140 (crm.distrimob.fr)
+# Les secrets viennent du fichier .env situe a cote (jamais commite, jamais envoye depuis le poste local).
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: crm-postgres
+    restart: unless-stopped
+    stop_signal: SIGINT
+    stop_grace_period: 60s
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    # Volume nomme plutot qu'un bind mount : Docker le cree et lui applique le bon
+    # owner (UID 70) tout seul, sans sudo ni chown prealable.
+    volumes:
+      - crm_postgres_data:/var/lib/postgresql/data
+    # Port different de l'ERP (5432) et ferme a l'exterieur.
+    ports:
+      - "127.0.0.1:5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build: .
+    image: crm-web:latest
+    container_name: crm-web
+    restart: unless-stopped
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      TZ: Africa/Casablanca
+    # Seul nginx parle au backend : rien d'expose sur l'IP publique.
+    ports:
+      - "127.0.0.1:8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null http://localhost:8080/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  crm_postgres_data:

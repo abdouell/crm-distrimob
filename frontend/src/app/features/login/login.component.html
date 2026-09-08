@@ -1,0 +1,58 @@
+<div class="login-wrapper">
+  <div class="login-container">
+    <div class="login-header">
+      <div class="brand-logo">
+        <i class="fa-solid fa-layer-group logo-icon"></i>
+        <span>Pyrami<span>dev</span></span>
+      </div>
+      <h2>Mini CRM • DistriMob</h2>
+      <p>Identifiez-vous pour accéder aux données commerciales</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" class="login-form">
+      <div class="form-group">
+        <label for="login-email">Adresse Email</label>
+        <div class="input-wrapper">
+          <i class="fa-solid fa-envelope input-icon"></i>
+          <input
+            type="email"
+            id="login-email"
+            name="email"
+            [(ngModel)]="email"
+            required
+            placeholder="nom@pyramidev.com"
+          />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="login-password">Mot de passe</label>
+        <div class="input-wrapper">
+          <i class="fa-solid fa-lock input-icon"></i>
+          <input
+            type="password"
+            id="login-password"
+            name="password"
+            [(ngModel)]="password"
+            required
+            placeholder="••••••••••••"
+          />
+        </div>
+      </div>
+
+      <div *ngIf="errorMessage" class="error-message">
+        <i class="fa-solid fa-circle-exclamation"></i>
+        <span>{{ errorMessage }}</span>
+      </div>
+
+      <button type="submit" [disabled]="loading" class="btn btn-primary btn-block">
+        <span>{{ loading ? 'Connexion...' : 'Se connecter' }}</span>
+        <i class="fa-solid fa-arrow-right-to-bracket"></i>
+      </button>
+    </form>
+    
+    <div class="login-footer">
+      <p>© 2026 Pyramidev SARL. Tous droits réservés.</p>
+    </div>
+  </div>
+</div>

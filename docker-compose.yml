@@ -1,0 +1,34 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: crm_java_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: pyramidev_crm
+      POSTGRES_USER: crm_user
+      POSTGRES_PASSWORD: crm_password123
+    volumes:
+      - postgres_java_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  web:
+    build: .
+    container_name: crm_java_web
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/pyramidev_crm
+      - SPRING_DATASOURCE_USERNAME=crm_user
+      - SPRING_DATASOURCE_PASSWORD=crm_password123
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.postgresql.Driver
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.PostgreSQLDialect
+      - JWT_SECRET_KEY=pyramidevCRMVeryLongSecretKeyMustBe32BytesLongForHS256
+    depends_on:
+      - db
+
+volumes:
+  postgres_java_data:
