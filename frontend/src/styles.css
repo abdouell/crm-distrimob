@@ -1254,3 +1254,66 @@ form {
         width: 100%;
     }
 }
+
+/* ==========================================================================
+   Pagination (liste des prospects)
+   ========================================================================== */
+.pagination {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 14px 4px 4px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 8px;
+}
+
+.pagination-info {
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.pagination-controls .btn {
+    min-width: 34px;
+    justify-content: center;
+}
+
+.pagination-controls .btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.pagination-size {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.pagination-size label {
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    margin: 0;
+}
+
+.pagination-size select {
+    padding: 5px 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    font-size: 0.88rem;
+}
+
+@media (max-width: 640px) {
+    .pagination {
+        justify-content: center;
+        text-align: center;
+    }
+}
