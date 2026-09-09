@@ -15,7 +15,7 @@ d'API a configurer. Le fallback des routes SPA est gere cote Java
 ```
 Internet ── nginx :443 (crm.distrimob.fr, cert Certbot)
               └── proxy_pass ──> 127.0.0.1:8080  crm-web    (SPA + API, image buildee sur le VPS)
-                                 127.0.0.1:5433  crm-postgres (bind mount /var/lib/crm-postgres)
+                                 127.0.0.1:5433  crm-postgres (volume Docker crm_postgres_data)
 ```
 
 Ports choisis pour ne pas croiser l'ERP (backend 8081, postgres 5432) et fermes a
@@ -39,44 +39,16 @@ Attendre la propagation avant l'etape Certbot :
 dig +short crm.distrimob.fr    # doit renvoyer 37.27.10.140
 ```
 
-### 2. Preparer le volume PostgreSQL
+### 2. `.env` de production — FAIT
 
-```bash
-ssh erp-admin@37.27.10.140
-sudo mkdir -p /var/lib/crm-postgres
-sudo chown -R 70:70 /var/lib/crm-postgres     # UID postgres dans les images alpine
-```
+Le fichier `/home/erp-admin/crm-project/.env` a ete cree sur le VPS avec un mot de
+passe PostgreSQL et une cle JWT generes par `openssl rand`, en mode `600`. Il ne
+quitte jamais le serveur : `deploy.sh` et `.dockerignore` l'excluent tous les deux.
 
-Sans cette etape, `initdb` echoue au premier demarrage (permission denied).
+Les valeurs par defaut du depot (`crm_password123`, la cle JWT en clair dans
+`application.yml`) ne sont donc pas utilisees en production.
 
-### 3. Creer le `.env` de production (sur le VPS uniquement)
-
-```bash
-mkdir -p /home/erp-admin/crm-project
-cd /home/erp-admin/crm-project
-```
-
-Depuis le poste local, un premier `./deploy.sh` echouera volontairement en
-signalant l'absence du `.env` — mais il aura deja copie `.env.example`. Sinon
-creer le fichier a la main :
-
-```bash
-cat > /home/erp-admin/crm-project/.env <<'EOF'
-POSTGRES_DB=pyramidev_crm
-POSTGRES_USER=crm_user
-POSTGRES_PASSWORD=<openssl rand -base64 32>
-JWT_SECRET_KEY=<openssl rand -base64 48>
-EOF
-chmod 600 /home/erp-admin/crm-project/.env
-```
-
-> Les valeurs par defaut du depot (`crm_password123`, la cle JWT en clair dans
-> `application.yml`) ne doivent **pas** partir en production. Le `.env` reste sur
-> le VPS : `deploy.sh` l'exclut explicitement de l'envoi.
-
-### 4. Premier deploiement
-
-Depuis le poste local, a la racine du projet :
+### 3. Premier deploiement — FAIT
 
 ```bash
 ./deploy.sh
@@ -84,38 +56,43 @@ Depuis le poste local, a la racine du projet :
 
 Le script envoie les sources (hors `node_modules`, `target`, `.angular`, `data`,
 logs), lance `docker compose -f docker-compose.prod.yml up --build -d` sur le VPS
-et attend que `crm-web` passe `healthy`. Flyway cree le schema et injecte le seed
-au premier demarrage.
+et attend que `crm-web` passe `healthy`.
 
-Verifier avant de brancher nginx :
+Etat verifie apres ce premier deploiement :
+
+- `crm-web` et `crm-postgres` : `healthy`
+- Flyway : migrations `V1`, `V2`, `V3` appliquees (`success = t`)
+- Seed : 2 utilisateurs, 3 prospects, 2 contacts, 4 interactions
+- `GET /` : `HTTP 200`, sert bien le build Angular (`<title>Pyramidev - Mini CRM</title>`)
+- `POST /api/auth/login` : `HTTP 200` (BCrypt + JWT operationnels)
+- `GET /api/prospects` sans token : `HTTP 403`
+- Aucune erreur ni exception dans les logs de demarrage
+- Conteneurs ERP inchanges
+
+L'application tourne, accessible uniquement depuis le VPS
+(`http://127.0.0.1:8080`) tant que les etapes 4 et 5 ne sont pas faites.
+
+### 4. Vhost nginx + certificat TLS — A FAIRE (sudo requis)
+
+Ces deux etapes demandent `sudo`, qui exige un mot de passe : elles ne peuvent pas
+etre lancees depuis une session SSH non interactive. Le script
+`deploy/setup-privileged.sh` les enchaine et se trouve deja sur le VPS.
+
+Une fois l'enregistrement DNS de l'etape 1 propage :
 
 ```bash
-ssh erp-admin@37.27.10.140 "curl -sI http://127.0.0.1:8080/ | head -1"   # HTTP/1.1 200
-```
-
-### 5. Vhost nginx
-
-```bash
-scp deploy/nginx/crm.distrimob.fr.conf erp-admin@37.27.10.140:/tmp/
 ssh erp-admin@37.27.10.140
-sudo mv /tmp/crm.distrimob.fr.conf /etc/nginx/sites-available/crm-pyramidev
-sudo ln -s /etc/nginx/sites-available/crm-pyramidev /etc/nginx/sites-enabled/
-sudo nginx -t && sudo systemctl reload nginx
+./crm-project/setup-privileged.sh
 ```
 
-### 6. Certificat TLS
-
-```bash
-sudo certbot --nginx -d crm.distrimob.fr
-```
-
-Certbot ajoute lui-meme le bloc `listen 443 ssl` et la redirection 80 -> 443, comme
-pour les vhosts existants. Le renouvellement automatique est deja en place sur la
-machine.
+Il verifie d'abord que `crm.distrimob.fr` resout vers `37.27.10.140` et s'arrete
+sinon, installe le vhost, valide la conf avec `nginx -t` avant tout `reload` (les
+sites ERP existants ne peuvent donc pas etre casses par une conf invalide), puis
+lance Certbot qui ajoute le bloc `listen 443 ssl` et la redirection 80 -> 443.
 
 L'application est alors accessible sur **https://crm.distrimob.fr**.
 
-### 7. Sauvegarde (optionnel, recommande)
+### 5. Sauvegarde (optionnel, recommande)
 
 Le VPS a deja un cron de backup pour l'ERP (`/home/erp-admin/backup-db.sh`, 3h du
 matin, upload S3). Pour couvrir aussi le CRM, dupliquer le script en changeant
@@ -144,6 +121,7 @@ puis ajouter une ligne au crontab (`crontab -e`) :
 ./deploy.sh status     # etat des conteneurs CRM
 ./deploy.sh restart    # redemarrer sans rebuild
 ./deploy.sh psql       # console PostgreSQL
+./import-linkedin.sh   # import LinkedIn (script separe : sauvegarde + import + controle)
 ./deploy.sh stop       # arreter
 ```
 
@@ -151,6 +129,33 @@ Le build tourne dans Docker sur le VPS : aucun JDK, Maven ou Node requis en loca
 Les couches `npm ci` et `mvn dependency:go-offline` sont mises en cache tant que
 `package.json` / `pom.xml` ne changent pas, donc un redeploiement courant prend
 ~1 min.
+
+---
+
+## Import de l'historique LinkedIn
+
+```bash
+./deploy.sh            # d'abord : deploie front + back, Flyway applique V4 et V5
+./import-linkedin.sh   # ensuite : sauvegarde, import, controle
+```
+
+`import-linkedin.sh` est independant du deploiement et ne touche que la base.
+Il refuse de s'executer tant que les migrations V4 et V5 ne sont pas en base
+(le script ecrit dans `prospect.linkedin_url`, colonne creee par V5). Il enchaine :
+
+1. controle des migrations, arret net si V4/V5 manquent ;
+2. `pg_dump` horodate dans `~/crm_avant_import_AAAAMMJJ_HHMMSS.sql.gz` ;
+3. transfert du SQL, application avec `ON_ERROR_STOP=1` puis **effacement du fichier
+   distant** — il contient des messages LinkedIn prives ;
+4. comptage de controle : 78 prospects, 64 contacts, 64 interactions attendus.
+
+Le SQL est encadre par `BEGIN/COMMIT` : en cas d'erreur, rien n'est ecrit a moitie.
+Il est idempotent, le rejouer ne cree aucun doublon.
+
+`csv/` et `import/` sont exclus de `sync_sources` : les messages bruts ne sont plus
+envoyes sur le VPS partage, seul le SQL y transite le temps de l'import.
+
+Voir `import/linkedin/PLAN_REPRISE.md` pour le detail des donnees et des choix de mapping.
 
 ---
 

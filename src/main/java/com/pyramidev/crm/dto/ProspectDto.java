@@ -20,10 +20,13 @@ public class ProspectDto {
     @NotBlank(message = "La ville est obligatoire")
     private String city;
 
-    @NotBlank(message = "Le numéro de téléphone est obligatoire")
     private String phone;
 
     private String website;
+
+    @JsonProperty("linkedin_url")
+    @JsonAlias({"linkedin_url", "linkedinUrl"})
+    private String linkedinUrl;
 
     @NotBlank(message = "La provenance/source est obligatoire")
     private String source;
@@ -68,6 +71,9 @@ public class ProspectDto {
 
     public String getWebsite() { return website; }
     public void setWebsite(String website) { this.website = website; }
+
+    public String getLinkedinUrl() { return linkedinUrl; }
+    public void setLinkedinUrl(String linkedinUrl) { this.linkedinUrl = linkedinUrl; }
 
     public String getSource() { return source; }
     public void setSource(String source) { this.source = source; }

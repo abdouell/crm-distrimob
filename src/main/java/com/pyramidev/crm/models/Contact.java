@@ -23,10 +23,10 @@ public class Contact {
     @Column(name = "job_title", nullable = false, length = 100)
     private String jobTitle;
 
-    @Column(nullable = false, length = 255)
+    @Column(length = 255)
     private String email;
 
-    @Column(nullable = false, length = 20)
+    @Column(length = 20)
     private String phone;
 
     @Column(name = "linkedin_url", length = 255)

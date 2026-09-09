@@ -27,11 +27,9 @@ public class ContactDto {
     @JsonAlias({"job_title", "jobTitle"})
     private String jobTitle;
     
-    @NotBlank(message = "L'adresse email est obligatoire")
     @Email(message = "Format d'email invalide")
     private String email;
     
-    @NotBlank(message = "Le numéro de téléphone est obligatoire")
     private String phone;
     
     @JsonProperty("linkedin_url")

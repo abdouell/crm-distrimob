@@ -50,6 +50,15 @@
             <ng-template #noWebsite><span class="info-value">-</span></ng-template>
           </div>
           <div class="info-item">
+            <span class="info-label">Page LinkedIn</span>
+            <span class="info-value" *ngIf="prospect.linkedin_url; else noLinkedin">
+              <a [href]="prospect.linkedin_url" target="_blank" rel="noopener">
+                <i class="fa-brands fa-linkedin" style="color: #0077b5;"></i> Page entreprise
+              </a>
+            </span>
+            <ng-template #noLinkedin><span class="info-value">-</span></ng-template>
+          </div>
+          <div class="info-item">
             <span class="info-label">Provenance / Source</span>
             <span class="info-value">{{ prospect.source }}</span>
           </div>
@@ -195,6 +204,10 @@
               <option value="production">Production</option>
               <option value="cosmétique">Cosmétique</option>
               <option value="pharma">Pharma</option>
+              <option value="IT / éditeur">IT / Éditeur</option>
+              <option value="services">Services</option>
+              <option value="agroalimentaire">Agroalimentaire</option>
+              <option value="distribution">Distribution</option>
               <option value="autre">Autre</option>
             </select>
           </div>
@@ -205,12 +218,16 @@
         </div>
         <div class="form-row">
           <div class="form-group col-6">
-            <label for="prospect-phone">Téléphone *</label>
-            <input type="text" id="prospect-phone" name="phone" [(ngModel)]="prospectForm.phone" required placeholder="ex: +212 522 00 11 22">
+            <label for="prospect-phone">Téléphone</label>
+            <input type="text" id="prospect-phone" name="phone" [(ngModel)]="prospectForm.phone" placeholder="ex: +212 522 00 11 22">
           </div>
           <div class="form-group col-6">
             <label for="prospect-website">Site Web</label>
             <input type="text" id="prospect-website" name="website" [(ngModel)]="prospectForm.website" placeholder="ex: https://distrifood.ma">
+          </div>
+          <div class="form-group col-6">
+            <label for="prospect-linkedin">Page LinkedIn entreprise</label>
+            <input type="text" id="prospect-linkedin" name="linkedin_url" [(ngModel)]="prospectForm.linkedin_url" placeholder="ex: https://linkedin.com/company/distrifood">
           </div>
         </div>
         <div class="form-row">
@@ -274,12 +291,12 @@
         </div>
         <div class="form-row">
           <div class="form-group col-6">
-            <label for="contact-email">Email *</label>
-            <input type="email" id="contact-email" name="email" [(ngModel)]="contactForm.email" required placeholder="ex: amine@cosmebelle.ma">
+            <label for="contact-email">Email</label>
+            <input type="email" id="contact-email" name="email" [(ngModel)]="contactForm.email" placeholder="ex: amine@cosmebelle.ma">
           </div>
           <div class="form-group col-6">
-            <label for="contact-phone">Téléphone mobile *</label>
-            <input type="text" id="contact-phone" name="phone" [(ngModel)]="contactForm.phone" required placeholder="ex: +212 661 22 33 44">
+            <label for="contact-phone">Téléphone mobile</label>
+            <input type="text" id="contact-phone" name="phone" [(ngModel)]="contactForm.phone" placeholder="ex: +212 661 22 33 44">
           </div>
         </div>
         <div class="form-group">

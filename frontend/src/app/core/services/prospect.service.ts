@@ -9,6 +9,7 @@ export interface Prospect {
   city: string;
   phone: string;
   website: string | null;
+  linkedin_url: string | null;
   source: string;
   status: string;
   notes: string | null;

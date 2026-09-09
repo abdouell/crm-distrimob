@@ -89,6 +89,7 @@ public class ProspectController {
         prospect.setCity(dto.getCity());
         prospect.setPhone(dto.getPhone());
         prospect.setWebsite(dto.getWebsite());
+        prospect.setLinkedinUrl(dto.getLinkedinUrl());
         prospect.setSource(dto.getSource());
         prospect.setStatus(dto.getStatus() != null ? dto.getStatus() : "nouveau");
         prospect.setNotes(dto.getNotes());
@@ -107,6 +108,7 @@ public class ProspectController {
                     prospect.setCity(dto.getCity());
                     prospect.setPhone(dto.getPhone());
                     prospect.setWebsite(dto.getWebsite());
+                    prospect.setLinkedinUrl(dto.getLinkedinUrl());
                     prospect.setSource(dto.getSource());
                     prospect.setStatus(dto.getStatus());
                     prospect.setNotes(dto.getNotes());
@@ -136,6 +138,7 @@ public class ProspectController {
         dto.setCity(p.getCity());
         dto.setPhone(p.getPhone());
         dto.setWebsite(p.getWebsite());
+        dto.setLinkedinUrl(p.getLinkedinUrl());
         dto.setSource(p.getSource());
         dto.setStatus(p.getStatus());
         dto.setNotes(p.getNotes());

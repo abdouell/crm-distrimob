@@ -83,6 +83,10 @@
             <option value="production">Production</option>
             <option value="cosmétique">Cosmétique</option>
             <option value="pharma">Pharma</option>
+            <option value="IT / éditeur">IT / Éditeur</option>
+            <option value="services">Services</option>
+            <option value="agroalimentaire">Agroalimentaire</option>
+            <option value="distribution">Distribution</option>
             <option value="autre">Autre</option>
           </select>
         </div>
@@ -124,7 +128,7 @@
               <i class="fa-solid fa-folder-open"></i> Aucun prospect trouvé.
             </td>
           </tr>
-          <tr *ngFor="let p of prospects">
+          <tr *ngFor="let p of pagedProspects">
             <td><strong>{{ p.name }}</strong></td>
             <td><span class="badge badge-outline">{{ p.activity_sector }}</span></td>
             <td>{{ p.city }}</td>
@@ -156,6 +160,46 @@
           </tr>
         </tbody>
       </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination" *ngIf="!loading && prospects.length > 0">
+      <div class="pagination-info">
+        {{ rangeStart }}–{{ rangeEnd }} sur {{ prospects.length }} prospect{{ prospects.length > 1 ? 's' : '' }}
+      </div>
+
+      <div class="pagination-controls" *ngIf="totalPages > 1">
+        <button class="btn btn-sm btn-secondary" (click)="goToPage(1)"
+                [disabled]="currentPage === 1" title="Première page">
+          <i class="fa-solid fa-angles-left"></i>
+        </button>
+        <button class="btn btn-sm btn-secondary" (click)="goToPage(currentPage - 1)"
+                [disabled]="currentPage === 1" title="Page précédente">
+          <i class="fa-solid fa-angle-left"></i>
+        </button>
+
+        <button *ngFor="let n of pageNumbers"
+                class="btn btn-sm"
+                [class.btn-primary]="n === currentPage"
+                [class.btn-secondary]="n !== currentPage"
+                (click)="goToPage(n)">{{ n }}</button>
+
+        <button class="btn btn-sm btn-secondary" (click)="goToPage(currentPage + 1)"
+                [disabled]="currentPage === totalPages" title="Page suivante">
+          <i class="fa-solid fa-angle-right"></i>
+        </button>
+        <button class="btn btn-sm btn-secondary" (click)="goToPage(totalPages)"
+                [disabled]="currentPage === totalPages" title="Dernière page">
+          <i class="fa-solid fa-angles-right"></i>
+        </button>
+      </div>
+
+      <div class="pagination-size">
+        <label for="page-size">Par page</label>
+        <select id="page-size" name="page-size" [(ngModel)]="pageSize" (change)="onPageSizeChange()">
+          <option *ngFor="let n of pageSizeOptions" [ngValue]="n">{{ n }}</option>
+        </select>
+      </div>
     </div>
   </div>
 
@@ -191,6 +235,10 @@
               <option value="production">Production</option>
               <option value="cosmétique">Cosmétique</option>
               <option value="pharma">Pharma</option>
+              <option value="IT / éditeur">IT / Éditeur</option>
+              <option value="services">Services</option>
+              <option value="agroalimentaire">Agroalimentaire</option>
+              <option value="distribution">Distribution</option>
               <option value="autre">Autre</option>
             </select>
           </div>
@@ -201,12 +249,16 @@
         </div>
         <div class="form-row">
           <div class="form-group col-6">
-            <label for="prospect-phone">Téléphone *</label>
-            <input type="text" id="prospect-phone" name="phone" [(ngModel)]="prospectForm.phone" required placeholder="ex: +212 522 00 11 22">
+            <label for="prospect-phone">Téléphone</label>
+            <input type="text" id="prospect-phone" name="phone" [(ngModel)]="prospectForm.phone" placeholder="ex: +212 522 00 11 22">
           </div>
           <div class="form-group col-6">
             <label for="prospect-website">Site Web</label>
             <input type="text" id="prospect-website" name="website" [(ngModel)]="prospectForm.website" placeholder="ex: https://distrifood.ma">
+          </div>
+          <div class="form-group col-6">
+            <label for="prospect-linkedin">Page LinkedIn entreprise</label>
+            <input type="text" id="prospect-linkedin" name="linkedin_url" [(ngModel)]="prospectForm.linkedin_url" placeholder="ex: https://linkedin.com/company/distrifood">
           </div>
         </div>
         <div class="form-row">

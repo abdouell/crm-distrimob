@@ -35,6 +35,12 @@ export class DashboardComponent implements OnInit {
     forgotten: 0
   };
 
+  // Pagination (cote client : les stats sont calculees sur la liste complete,
+  // paginer cote serveur les fausserait)
+  currentPage = 1;
+  pageSize = 10;
+  readonly pageSizeOptions = [10, 25, 50, 100];
+
   // Modal State & Form
   showModal = false;
   editingProspect: Prospect | null = null;
@@ -55,6 +61,7 @@ export class DashboardComponent implements OnInit {
       next: (data) => {
         this.prospects = data;
         this.calculateStats(data);
+        this.clampPage();
         this.loading = false;
       },
       error: (err) => {
@@ -84,7 +91,52 @@ export class DashboardComponent implements OnInit {
   }
 
   onFilterChange(): void {
+    this.currentPage = 1;      // un nouveau filtre repart de la premiere page
     this.fetchProspects();
+  }
+
+  // ---------- Pagination ----------
+  get totalPages(): number {
+    return Math.max(1, Math.ceil(this.prospects.length / this.pageSize));
+  }
+
+  get pagedProspects(): Prospect[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.prospects.slice(start, start + this.pageSize);
+  }
+
+  get rangeStart(): number {
+    return this.prospects.length === 0 ? 0 : (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  get rangeEnd(): number {
+    return Math.min(this.currentPage * this.pageSize, this.prospects.length);
+  }
+
+  /** Fenetre de 5 numeros max, centree sur la page courante. */
+  get pageNumbers(): number[] {
+    const total = this.totalPages;
+    let first = Math.max(1, this.currentPage - 2);
+    const last = Math.min(total, first + 4);
+    first = Math.max(1, last - 4);
+    return Array.from({ length: last - first + 1 }, (_, i) => first + i);
+  }
+
+  goToPage(page: number): void {
+    if (page < 1 || page > this.totalPages || page === this.currentPage) return;
+    this.currentPage = page;
+  }
+
+  onPageSizeChange(): void {
+    this.pageSize = Number(this.pageSize);
+    this.currentPage = 1;
+  }
+
+  /** Apres suppression ou filtrage, la page courante peut ne plus exister. */
+  private clampPage(): void {
+    if (this.currentPage > this.totalPages) {
+      this.currentPage = this.totalPages;
+    }
   }
 
   getStatusClass(status: string): string {
@@ -130,6 +182,7 @@ export class DashboardComponent implements OnInit {
       city: '',
       phone: '',
       website: '',
+      linkedin_url: '',
       source: '',
       status: 'nouveau',
       notes: ''
@@ -137,7 +190,7 @@ export class DashboardComponent implements OnInit {
   }
 
   saveProspect(): void {
-    if (!this.prospectForm.name || !this.prospectForm.activity_sector || !this.prospectForm.city || !this.prospectForm.phone || !this.prospectForm.source) {
+    if (!this.prospectForm.name || !this.prospectForm.activity_sector || !this.prospectForm.city || !this.prospectForm.source) {
       this.showToast('Veuillez remplir tous les champs obligatoires (*).', 'error');
       return;
     }

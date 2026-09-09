@@ -126,7 +126,7 @@ export class ProspectDetailComponent implements OnInit {
   }
 
   saveProspect(): void {
-    if (!this.prospectForm.name || !this.prospectForm.activity_sector || !this.prospectForm.city || !this.prospectForm.phone || !this.prospectForm.source) {
+    if (!this.prospectForm.name || !this.prospectForm.activity_sector || !this.prospectForm.city || !this.prospectForm.source) {
       this.showToast('Veuillez remplir tous les champs obligatoires (*).', 'error');
       return;
     }

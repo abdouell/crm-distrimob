@@ -22,11 +22,14 @@ public class Prospect {
     @Column(nullable = false, length = 100)
     private String city;
 
-    @Column(nullable = false, length = 20)
+    @Column(length = 20)
     private String phone;
 
     @Column(length = 255)
     private String website;
+
+    @Column(name = "linkedin_url", length = 255)
+    private String linkedinUrl;
 
     @Column(nullable = false, length = 50)
     private String source;
@@ -72,6 +75,9 @@ public class Prospect {
 
     public String getWebsite() { return website; }
     public void setWebsite(String website) { this.website = website; }
+
+    public String getLinkedinUrl() { return linkedinUrl; }
+    public void setLinkedinUrl(String linkedinUrl) { this.linkedinUrl = linkedinUrl; }
 
     public String getSource() { return source; }
     public void setSource(String source) { this.source = source; }
